@@ -27,4 +27,19 @@ class GlobalFunctions {
       }
     }
   }
+
+  //Loading Widget
+  static void loadingWidget(context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: Image.asset(
+            'assets/images/loading animation.gif',
+          ),
+        );
+      },
+    );
+  }
 }

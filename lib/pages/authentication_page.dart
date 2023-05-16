@@ -1,9 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:artesanal_foods/components/global_functions.dart';
+import 'package:artesanal_foods/data/connection.dart';
 import 'package:artesanal_foods/data/save_data.dart';
+import 'package:artesanal_foods/store/global.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:provider/provider.dart';
 
 class AuthenticationPage extends StatefulWidget {
   const AuthenticationPage({super.key});
@@ -14,23 +20,28 @@ class AuthenticationPage extends StatefulWidget {
 
 class _AuthenticationPageState extends State<AuthenticationPage> {
   late final bool isFirstOpen;
-  //Pickup system theme
-  bool isDarkMode = SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+  bool rememberMe = false;
+  bool isLoading = false;
+
+  TextEditingController clientEmail = TextEditingController();
+  TextEditingController clientPassword = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    //Delete after debugging
-    SaveData.setIsFirstOpen(true);
+    //Data Variable
+    final data = Provider.of<SystemData>(context, listen: false);
+
     //First Open Dialog
-    isFirstOpen = SaveData.getIsFirstOpen() ?? true;
-    if (isFirstOpen) {
+    if (SaveData.getIsFirstLogin() == 'yes') {
+      //Pickup system theme
+      SystemData().changeDarkMode(SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
       Future.delayed(const Duration(milliseconds: 500)).then((value) => AwesomeDialog(
             context: context,
             dialogType: DialogType.info,
-            dialogBackgroundColor: GlobalFunctions.returnThemeColor(isDarkMode, context),
+            dialogBackgroundColor: GlobalFunctions.returnThemeColor(SystemData().isDarkMode, context),
             borderSide: BorderSide(
-              color: GlobalFunctions.returnThemeColor(isDarkMode, context, isPrimary: false),
+              color: GlobalFunctions.returnThemeColor(SystemData().isDarkMode, context, isPrimary: false),
               width: 2,
             ),
             buttonsBorderRadius: const BorderRadius.all(
@@ -38,7 +49,55 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
             ),
             dismissOnTouchOutside: true,
             dismissOnBackKeyPress: false,
-            onDismissCallback: (_) {},
+            onDismissCallback: (_) {
+              AwesomeDialog(
+                context: context,
+                dialogType: DialogType.success,
+                dialogBackgroundColor: GlobalFunctions.returnThemeColor(data.isDarkMode, context),
+                borderSide: BorderSide(
+                  color: GlobalFunctions.returnThemeColor(data.isDarkMode, context, isPrimary: false),
+                  width: 2,
+                ),
+                buttonsBorderRadius: const BorderRadius.all(
+                  Radius.circular(2),
+                ),
+                dismissOnTouchOutside: true,
+                dismissOnBackKeyPress: false,
+                onDismissCallback: (_) {},
+                width: GlobalFunctions.isMonitor(MediaQuery.of(context).size) ? MediaQuery.of(context).size.width * 0.3 : double.infinity,
+                headerAnimationLoop: false,
+                animType: AnimType.bottomSlide,
+                body: Column(
+                  children: [
+                    //Description
+                    Container(
+                      width: GlobalFunctions.isMonitor(MediaQuery.of(context).size) ? MediaQuery.of(context).size.width * 0.3 : double.infinity,
+                      height: 100,
+                      padding: const EdgeInsets.all(10),
+                      child: Text(
+                        'You can change the theme anytime in the options.',
+                        style: TextStyle(fontSize: 20, color: GlobalFunctions.returnThemeColor(data.isDarkMode, context, isPrimary: false)),
+                      ),
+                    ),
+                    //Button
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        height: 25,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 236, 69, 125)),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const FittedBox(child: Text('Ok', style: TextStyle(color: Color.fromARGB(255, 44, 42, 42), fontSize: 100))),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ).show();
+            },
             width: GlobalFunctions.isMonitor(MediaQuery.of(context).size) ? MediaQuery.of(context).size.width * 0.3 : double.infinity,
             headerAnimationLoop: false,
             animType: AnimType.bottomSlide,
@@ -51,7 +110,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                   padding: const EdgeInsets.all(10),
                   child: Text(
                     'Hey,\nour chocolate bars, told us it\'s your first time here.\nwhat\'s your favorite theme?',
-                    style: TextStyle(fontSize: 20, color: GlobalFunctions.returnThemeColor(isDarkMode, context, isPrimary: false)),
+                    style: TextStyle(fontSize: 20, color: GlobalFunctions.returnThemeColor(SystemData().isDarkMode, context, isPrimary: false)),
                   ),
                 ),
                 //Buttons
@@ -66,7 +125,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 44, 42, 42)),
                             onPressed: () {
-                              SaveData.setIsFirstOpen(false);
+                              data.changeDarkMode(true);
+                              SaveData.setIsFirstLogin('no');
                               Navigator.pop(context);
                             },
                             child: const FittedBox(child: Text('Black Chocolate', style: TextStyle(fontSize: 100))),
@@ -82,7 +142,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                             onPressed: () {
-                              SaveData.setIsFirstOpen(false);
+                              data.changeDarkMode(false);
+                              SaveData.setIsFirstLogin('no');
                               Navigator.pop(context);
                             },
                             child: const FittedBox(child: Text('White Chocolate', style: TextStyle(color: Color.fromARGB(255, 44, 42, 42), fontSize: 100))),
@@ -95,20 +156,46 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
               ],
             ),
           ).show());
+      return;
     }
+    data.changeDarkMode(SaveData.getIsDarkMode() ?? true);
   }
 
-  bool rememberMe = false;
   @override
   Widget build(BuildContext context) {
+    final data = Provider.of<SystemData>(context, listen: false);
     final screenSize = MediaQuery.of(context).size;
 
-    loginButton() {}
+    loginButton() async {
+      //Make the login button blocked
+      setState(() {
+        isLoading = true;
+      });
+      //Initialize loading widget
+      GlobalFunctions.loadingWidget(context);
+      final result = await Connection.login(clientEmail.text, clientPassword.text);
+      if (result == 'Success') {
+        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(context, '/best_sellers', (route) => false);
+        //Unblock button
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        //Call error treatment
+        await Connection.resultResponses(context, result);
+        FocusManager.instance.primaryFocus?.unfocus();
+        //Unblock button
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
 
     final mobile = Center(
       child: Container(
         width: screenSize.width * 0.8,
-        height: screenSize.height * 0.4,
+        height: screenSize.height * 0.42,
         //Decoration of the box (Circular and Color)
         decoration: BoxDecoration(
           color: Colors.white,
@@ -138,9 +225,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                 width: screenSize.width * 0.8,
                 height: screenSize.height * 0.08,
                 child: TextFormField(
+                  controller: clientEmail,
                   keyboardType: TextInputType.emailAddress,
                   autofocus: false,
-                  initialValue: '',
                   style: const TextStyle(fontWeight: FontWeight.normal),
                   decoration: InputDecoration(
                     hintText: 'Email',
@@ -155,9 +242,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                 width: screenSize.width * 0.8,
                 height: screenSize.height * 0.08,
                 child: TextFormField(
+                  controller: clientPassword,
                   keyboardType: TextInputType.emailAddress,
                   autofocus: false,
-                  initialValue: '',
                   style: const TextStyle(fontWeight: FontWeight.normal),
                   decoration: InputDecoration(
                     hintText: 'Password',
@@ -171,33 +258,31 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
               SizedBox(
                 width: screenSize.width * 0.8,
                 height: screenSize.height * 0.05,
-                child: FittedBox(
-                  child: Row(
-                    children: [
-                      //Check Box
-                      Theme(
-                        data: Theme.of(context).copyWith(
-                          unselectedWidgetColor: const Color.fromARGB(255, 236, 69, 125),
-                        ),
-                        child: Checkbox(
-                          activeColor: const Color.fromARGB(255, 236, 69, 125),
-                          value: rememberMe,
-                          onChanged: (checked) => setState(
-                            () {
-                              rememberMe = !rememberMe;
-                            },
-                          ),
+                child: Row(
+                  children: [
+                    //Check Box
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        unselectedWidgetColor: const Color.fromARGB(255, 236, 69, 125),
+                      ),
+                      child: Checkbox(
+                        activeColor: const Color.fromARGB(255, 236, 69, 125),
+                        value: rememberMe,
+                        onChanged: (checked) => setState(
+                          () {
+                            rememberMe = !rememberMe;
+                          },
                         ),
                       ),
-                      //Remember Text
-                      const Text(
-                        'Remember',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      //Spacer
-                      SizedBox(width: screenSize.width * 0.4)
-                    ],
-                  ),
+                    ),
+                    //Remember Text
+                    const Text(
+                      'Remember',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    //Spacer
+                    SizedBox(width: screenSize.width * 0.4)
+                  ],
                 ),
               ),
               //Login Button
@@ -211,7 +296,14 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                       width: screenSize.width * 0.2,
                       height: screenSize.height * 0.05,
                       child: ElevatedButton(
-                        onPressed: loginButton(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 236, 69, 125),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                loginButton();
+                              },
                         child: const FittedBox(child: Text('Login', style: TextStyle(fontSize: 100))),
                       ),
                     ),
@@ -258,9 +350,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                 width: screenSize.width * 0.8,
                 height: screenSize.height * 0.08,
                 child: TextFormField(
+                  controller: clientEmail,
                   keyboardType: TextInputType.emailAddress,
                   autofocus: false,
-                  initialValue: '',
                   style: const TextStyle(fontWeight: FontWeight.normal),
                   decoration: InputDecoration(
                     hintText: 'Email',
@@ -275,9 +367,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                 width: screenSize.width * 0.8,
                 height: screenSize.height * 0.08,
                 child: TextFormField(
+                  controller: clientPassword,
                   keyboardType: TextInputType.emailAddress,
                   autofocus: false,
-                  initialValue: '',
                   style: const TextStyle(fontWeight: FontWeight.normal),
                   decoration: InputDecoration(
                     hintText: 'Password',
@@ -331,7 +423,14 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                       width: screenSize.width * 0.05,
                       height: screenSize.height * 0.05,
                       child: ElevatedButton(
-                        onPressed: loginButton(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 236, 69, 125),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                loginButton();
+                              },
                         child: const FittedBox(child: Text('Login', style: TextStyle(fontSize: 100))),
                       ),
                     ),
@@ -350,19 +449,21 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       backgroundColor: const Color.fromARGB(213, 3, 153, 223),
       body: Stack(
         children: [
-          Container(
-            color: GlobalFunctions.returnThemeColor(isDarkMode, context),
-            width: screenSize.width,
-            height: screenSize.height,
-            child: isDarkMode
-                ? Image.asset(
-                    'assets/images/background_black.png',
-                    fit: GlobalFunctions.isMonitor(screenSize) ? BoxFit.fill : BoxFit.fitHeight,
-                  )
-                : Image.asset(
-                    'assets/images/background_white.png',
-                    fit: GlobalFunctions.isMonitor(screenSize) ? BoxFit.fill : BoxFit.fitHeight,
-                  ),
+          Observer(
+            builder: (_) => Container(
+              color: GlobalFunctions.returnThemeColor(data.isDarkMode, context),
+              width: screenSize.width,
+              height: screenSize.height,
+              child: data.isDarkMode
+                  ? Image.asset(
+                      'assets/images/background_black.png',
+                      fit: GlobalFunctions.isMonitor(screenSize) ? BoxFit.fill : BoxFit.fitHeight,
+                    )
+                  : Image.asset(
+                      'assets/images/background_white.png',
+                      fit: GlobalFunctions.isMonitor(screenSize) ? BoxFit.fill : BoxFit.fitHeight,
+                    ),
+            ),
           ),
           GlobalFunctions.isMonitor(screenSize) ? monitor : mobile,
         ],

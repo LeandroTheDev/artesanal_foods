@@ -5,14 +5,17 @@ class SaveData {
   static late SharedPreferences _preferences;
 
   //Storage Login
-  static const _keyIsFirstOpen = true;
+  static const _keyIsDarkMode = true;
+  static const _keyIsFirstLogin = 'yes';
 
   //Load Datas
   static Future init() async => _preferences = await SharedPreferences.getInstance();
 
   //Set Datas
-  static Future setIsFirstOpen(bool isFirstOpen) async => await _preferences.setBool(_keyIsFirstOpen.toString(), isFirstOpen);
+  static Future setIsDarkMode(bool isDarkMode) async => await _preferences.setBool(_keyIsDarkMode.toString(), isDarkMode);
+  static Future setIsFirstLogin(String isFirstLogin) async => await _preferences.setString(_keyIsFirstLogin, isFirstLogin);
 
   //Get Datas Login
-  static bool? getIsFirstOpen() => _preferences.getBool(_keyIsFirstOpen.toString());
+  static bool? getIsDarkMode() => _preferences.getBool(_keyIsDarkMode.toString());
+  static String? getIsFirstLogin() => _preferences.getString(_keyIsFirstLogin);
 }

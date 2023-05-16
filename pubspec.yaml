@@ -34,6 +34,7 @@ dependencies:
   mobx: ^2.2.0
   flutter_mobx: ^2.0.6+5
   provider: ^6.0.5
+  shared_preferences: ^2.1.1
   #Design
   awesome_dialog: ^3.0.2
 
@@ -69,6 +70,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

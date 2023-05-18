@@ -1,6 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:artesanal_foods/components/global_functions.dart';
+import 'package:artesanal_foods/store/global_functions.dart';
 import 'package:artesanal_foods/data/connection.dart';
 import 'package:artesanal_foods/data/save_data.dart';
 import 'package:artesanal_foods/store/global.dart';
@@ -31,11 +31,10 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     super.initState();
     //Data Variable
     final data = Provider.of<SystemData>(context, listen: false);
-
     //First Open Dialog
-    if (SaveData.getIsFirstLogin() == 'yes') {
+    if (SaveData.getIsFirstLogin() == 'true') {
       //Pickup system theme
-      SystemData().changeDarkMode(SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+      SystemData().changeDarkMode((SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark).toString());
       Future.delayed(const Duration(milliseconds: 500)).then((value) => AwesomeDialog(
             context: context,
             dialogType: DialogType.info,
@@ -125,8 +124,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 44, 42, 42)),
                             onPressed: () {
-                              data.changeDarkMode(true);
-                              SaveData.setIsFirstLogin('no');
+                              data.changeDarkMode('true');
+                              SaveData.setIsFirstLogin('false');
                               Navigator.pop(context);
                             },
                             child: const FittedBox(child: Text('Black Chocolate', style: TextStyle(fontSize: 100))),
@@ -142,8 +141,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                             onPressed: () {
-                              data.changeDarkMode(false);
-                              SaveData.setIsFirstLogin('no');
+                              data.changeDarkMode('false');
+                              SaveData.setIsFirstLogin('false');
                               Navigator.pop(context);
                             },
                             child: const FittedBox(child: Text('White Chocolate', style: TextStyle(color: Color.fromARGB(255, 44, 42, 42), fontSize: 100))),
@@ -158,7 +157,35 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           ).show());
       return;
     }
-    data.changeDarkMode(SaveData.getIsDarkMode() ?? true);
+    isLoading = true;
+    //Remember Login
+    if (SaveData.getRemember() == 'true') {
+      data.changeEmail(SaveData.getEmail());
+      data.changePassword(SaveData.getPassword());
+      //Loading Widget
+      Future.delayed(const Duration(milliseconds: 500)).then((value) => GlobalFunctions.loadingWidget(context));
+      //Start Connection
+      Future.delayed(const Duration(milliseconds: 1000)).then((value) async {
+        final result = await Connection.login(SaveData.getEmail(), SaveData.getPassword());
+        if (result == 'Success') {
+          Navigator.pushNamedAndRemoveUntil(context, '/best_sellers', (route) => false);
+          //Unblock button
+          setState(() {
+            isLoading = false;
+          });
+        } else {
+          //Call error treatment
+          await Connection.resultResponses(context, result);
+          FocusManager.instance.primaryFocus?.unfocus();
+          //Unblock button
+          setState(() {
+            isLoading = false;
+          });
+        }
+      });
+      return;
+    }
+    isLoading = false;
   }
 
   @override
@@ -175,6 +202,12 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       GlobalFunctions.loadingWidget(context);
       final result = await Connection.login(clientEmail.text, clientPassword.text);
       if (result == 'Success') {
+        SaveData.setRemember('false');
+        if (rememberMe) {
+          SaveData.setEmail(clientEmail.text);
+          SaveData.setPassword(clientPassword.text);
+          SaveData.setRemember('true');
+        }
         Navigator.pop(context);
         Navigator.pushNamedAndRemoveUntil(context, '/best_sellers', (route) => false);
         //Unblock button

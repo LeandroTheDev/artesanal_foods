@@ -1,4 +1,4 @@
-import 'package:artesanal_foods/components/global_functions.dart';
+import 'package:artesanal_foods/store/global_functions.dart';
 import 'package:artesanal_foods/data/dummy_data.dart';
 
 import 'package:awesome_dialog/awesome_dialog.dart';

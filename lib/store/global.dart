@@ -14,6 +14,18 @@ abstract class SystemBase with Store {
   String password = '';
   @observable
   String username = '';
+  @observable
+  List cart = [];
+
+  @action
+  void addCartItem(value) {
+    cart.add(value);
+  }
+
+  @action
+  void removeCartItem(value) {
+    cart.removeAt(value);
+  }
 
   @action
   void changeDarkMode(value) {

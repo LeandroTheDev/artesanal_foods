@@ -1,6 +1,6 @@
 import 'package:artesanal_foods/data/save_data.dart';
 import 'package:artesanal_foods/pages/authentication_page.dart';
-import 'package:artesanal_foods/pages/best_sellers.dart';
+import 'package:artesanal_foods/pages/best_sellers_page.dart';
 import 'package:artesanal_foods/store/global.dart';
 import 'package:provider/provider.dart';
 

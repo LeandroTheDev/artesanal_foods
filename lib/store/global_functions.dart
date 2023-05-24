@@ -11,18 +11,31 @@ class GlobalFunctions {
   }
 
   //Return theme colors
-  static Color returnThemeColor(selectedTheme, context, {isPrimary = true}) {
+  static Color returnThemeColor(selectedTheme, context,
+      {isPrimary = true, isTransparent = false}) {
     //True == Dark
     if (!selectedTheme) {
       if (isPrimary) {
+        if (isTransparent) {
+          return const Color.fromARGB(100, 236, 69, 125);
+        }
         return const Color.fromARGB(255, 236, 69, 125);
       } else {
+        if (isTransparent) {
+          return const Color.fromARGB(100, 255, 255, 255);
+        }
         return Colors.white;
       }
     } else {
       if (isPrimary) {
+        if (isTransparent) {
+          return const Color.fromARGB(100, 44, 42, 42);
+        }
         return const Color.fromARGB(255, 44, 42, 42);
       } else {
+        if (isTransparent) {
+          return const Color.fromARGB(100, 236, 69, 125);
+        }
         return const Color.fromARGB(255, 236, 69, 125);
       }
     }
